@@ -1,5 +1,6 @@
 import openai
 import json
+import re
 
 openai.api_key_path = 'openai_key'
 
@@ -20,6 +21,27 @@ def display_stats():
             for item in stats['Items']:
                 print(item)
 
+def process_response(response):
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=messages
+    )
+    message_resp = response['choices'][0]['message']['content']
+    message_piece = message_resp.split('ITEMSTATS: ')
+    if len(message_piece) == 1:
+        mess_copy = messages
+        mess_copy.append({'role':'user', 'content': 'ITEMSTATS'})
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=mess_copy
+        )
+        message_resp += response['choices'][0]['message']['content']
+        message_piece.append(message_resp.split('ITEMSTATS: ')[1])
+
+    message, stats_str = message_piece
+    search = re.search("{[^{}]*}", stats_str)
+    return message.strip(), json.loads(search.group())
+
 def prompt_user():
     prompt = input('Please describe the setting of the game you want to play:\n> ')
     messages.append({'role':'user', 'content': 'Prompt: ' + prompt})
@@ -28,46 +50,27 @@ def prompt_user():
         messages=messages
     )
     message_resp = response['choices'][0]['message']['content']
-    if 'ITEMSTATS' not in message_resp:
-        mess_copy = messages
-        mess_copy.append({'role':'user', 'content': 'ITEMSTATS'})
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=mess_copy
-        )
-        message_resp += response['choices'][0]['message']
-    
-    message, stats_str = message_resp.split('ITEMSTATS: ')
+    message, stat = process_response(message_resp)
     global stats
-    stats = json.loads(stats_str)
-    # print(stats)
-    messages.append(message)
+    stats = stat
+    messages.append({'role': response['choices'][0]['message']['role'], 'content': message})
     print(message)
 
 def game_loop():
     prompt = input('\n> ')
-    messages.append({'role':'user', 'content': prompt})
     if prompt == 'stats':
         display_stats()
     else:
+        messages.append({'role':'user', 'content': 'Prompt: ' + prompt})
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=messages
         )
         message_resp = response['choices'][0]['message']['content']
-        if 'ITEMSTATS' not in message_resp:
-            mess_copy = messages
-            mess_copy.append({'role':'user', 'content': 'ITEMSTATS'})
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=mess_copy
-            )
-            message_resp += response['choices'][0]['message']
-        
-        message, stats_str = message_resp.split('ITEMSTATS: ')
-        stats = json.loads(stats_str)
-
-        messages.append(message)
+        message, stat = process_response(message_resp)
+        global stats
+        stats = stat
+        messages.append({'role': response['choices'][0]['message']['role'], 'content': message})
         print(message)
 
 prompt_user()
