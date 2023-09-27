@@ -29,13 +29,17 @@ def process_response(response):
     message_resp = response['choices'][0]['message']['content']
     message_piece = message_resp.split('ITEMSTATS: ')
     if len(message_piece) == 1:
+        messages.append({'role': response['choices'][0]['message']['role'], 'content': message_resp})
         mess_copy = messages
-        mess_copy.append({'role':'user', 'content': 'ITEMSTATS'})
+        mess_copy.append({'role':'user', 'content': 'give me ITEMSTATS'})
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=mess_copy
         )
         message_resp += response['choices'][0]['message']['content']
+        if len(message_resp.split('ITEMSTATS: ')) != 2:
+            print('-------------------------------------------------')
+            print(message_resp)
         message_piece.append(message_resp.split('ITEMSTATS: ')[1])
 
     message, stats_str = message_piece
@@ -53,7 +57,6 @@ def prompt_user():
     message, stat = process_response(message_resp)
     global stats
     stats = stat
-    messages.append({'role': response['choices'][0]['message']['role'], 'content': message})
     print(message)
 
 def game_loop():
