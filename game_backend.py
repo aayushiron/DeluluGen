@@ -7,11 +7,12 @@ openai.api_key_path = 'openai_key'
 stats = {}
 messages = [{'role': 'system', \
              'content': 'You are going to control a game defined by a ' + 
-                         'prompt given to you. You will give the player ' +
-                         'a full background for their character and their stats. ' +
+                         'prompt given to you. You will create the player\'s ' +
+                         'character a full background and will generate all their stats. ' +
                          'You will add the struct ITEMSTATS: {"Health"\: <health>, ' +
                          '"SP"\: <sp>, "Items"\: []} ' +
-                         'at the end of all your messages'}]
+                         'at the end of all your messages'}, \
+            ]
 
 def display_stats():
     # print(stats)
@@ -46,8 +47,8 @@ def process_response(response):
     search = re.search("{[^{}]*}", stats_str)
     return message.strip(), json.loads(search.group())
 
-def prompt_user():
-    prompt = input('Please describe the setting of the game you want to play:\n> ')
+def prompt_user(prompt):
+    # prompt = input('Please describe the setting of the game you want to play:\n> ')
     messages.append({'role':'user', 'content': 'Prompt: ' + prompt})
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
@@ -57,10 +58,11 @@ def prompt_user():
     message, stat = process_response(message_resp)
     global stats
     stats = stat
-    print(message)
+    return message
+    # print(message)
 
-def game_loop():
-    prompt = input('\n> ')
+def game_loop(prompt):
+    # prompt = input('\n> ')
     if prompt == 'stats':
         display_stats()
     else:
@@ -74,9 +76,12 @@ def game_loop():
         global stats
         stats = stat
         messages.append({'role': response['choices'][0]['message']['role'], 'content': message})
-        print(message)
+        return message
+        # print(message)
 
-prompt_user()
+# prompt_user()
 
-while (True):
-    game_loop()
+# while (True):
+#     game_loop()
+
+
