@@ -16,13 +16,20 @@ stats_text = StringVar(value="🤖")
 scrollframe = Frame(master=window, border=1)
 stats = Label(textvariable=stats_text, master=scrollframe)
 stats.pack()
+
 itemlabel = Label(master=scrollframe, text='\nItems')
 itemlabel.pack()
+
 scrollbar = Scrollbar(master=scrollframe)
 scrollbar.pack(side = RIGHT, fill=Y)
-itemlist = Listbox(scrollframe, yscrollcommand = scrollbar.set)
+
+horizontal_scrollbar = Scrollbar(master=scrollframe, orient='horizontal')
+horizontal_scrollbar.pack(side=BOTTOM, fill=X)
+
+itemlist = Listbox(scrollframe, yscrollcommand = scrollbar.set, xscrollcommand=horizontal_scrollbar.set)
 itemlist.pack( side = LEFT, fill = BOTH )
 scrollbar.config( command = itemlist.yview )
+horizontal_scrollbar.config( command = itemlist.xview )
 
 scrollframe.pack(side=LEFT, fill=Y)
 
@@ -32,9 +39,10 @@ scrollframe.pack(side=LEFT, fill=Y)
 logframe = Frame(master=window)
 loglabel = Label(master=logframe, text='Log')
 loglabel.pack(side=TOP)
-logscroll = Scrollbar(master=logframe)
+log = Text(master=logframe, wrap=WORD)
+logscroll = Scrollbar(master=logframe, command=log.yview)
 logscroll.pack(side = RIGHT, fill=Y)
-log = Text(master=logframe, yscrollcommand = logscroll.set)
+log.config( yscrollcommand = logscroll.set)
 log.insert(END, "Please describe the setting of the game you want to play")
 log.config(state=DISABLED)
 log.pack(fill=BOTH)
@@ -106,4 +114,5 @@ entryframe.pack(side=BOTTOM)
 
 
 window.config(padx=10, pady=10)
+window.title('Delulu Gen')
 window.mainloop()

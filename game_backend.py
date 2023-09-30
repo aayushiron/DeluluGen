@@ -6,14 +6,22 @@ import random
 openai.api_key_path = 'openai_key'
 
 stats = {}
-messages = [{'role': 'system', \
-             'content': 'You are going to control a game defined by a ' + 
-                         'prompt given to you. You will create the player\'s ' +
-                         'character a full background and will generate all their stats. ' +
-                         'You will add the struct ITEMSTATS: {"Health"\: <health>, ' +
-                         '"SP"\: <sp>, "Items"\: []} ' +
-                         'at the end of all your messages'}, \
-            ]
+messages = [
+    {
+        'role': 'system',
+        'content': 'You are going to control a game defined by a ' + 
+                    'prompt given to you. You will create the player\'s ' +
+                    'character a full background and will generate all their stats. ' +
+                    'You will add the struct ITEMSTATS: {"Health"\: <health>, ' +
+                    '"SP"\: <sp>, "Items"\: []} ' +
+                    'at the end of all your messages. Generate a character only once.'
+    },
+    {
+        'role': 'assistant',
+        'content': 'Tell me your prompt for the setting, and I will generate your' +
+                   'character and all their stats using that.'
+    }
+]
 
 sentiment_message = [
     {
@@ -46,14 +54,10 @@ def display_stats():
                 print(item)
 
 def process_response(response):
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=messages
-    )
     message_resp = response['choices'][0]['message']['content']
     message_piece = message_resp.split('ITEMSTATS: ')
+    messages.append({'role': response['choices'][0]['message']['role'], 'content': message_piece[0]})
     if len(message_piece) == 1:
-        messages.append({'role': response['choices'][0]['message']['role'], 'content': message_resp})
         mess_copy = messages
         mess_copy.append({'role':'user', 'content': 'give me ITEMSTATS'})
         response = openai.ChatCompletion.create(
@@ -72,14 +76,20 @@ def process_response(response):
 
 def prompt_user(prompt):
     # prompt = input('Please describe the setting of the game you want to play:\n> ')
-    messages.append({'role':'user', 'content': 'Prompt: ' + prompt})
+    messages.append({'role':'user', 'content': prompt})
     try:
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=messages
         )
+        # process_response(response)
+        # messages.append({'role':'user', 'content': 'Where am I'})
+        # response = openai.ChatCompletion.create(
+        #     model="gpt-4",
+        #     messages=messages
+        # )
         message_resp = response['choices'][0]['message']['content']
-        message, stat = process_response(message_resp)
+        message, stat = process_response(response)
     except:
         return "Error: ChatGPT is being mean 🐄. The prompt might be invalid.", 1
     global stats
@@ -99,7 +109,7 @@ def game_loop(prompt):
                 messages=messages
             )
             message_resp = response['choices'][0]['message']['content']
-            message, stat = process_response(message_resp)
+            message, stat = process_response(response)
         except Exception as e:
             print(e)
             return "Error: ChatGPT is being mean 🐄. Try again in 20s.", 1
