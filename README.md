@@ -13,6 +13,7 @@ A text-based game that leverages OpenAI's GPT-4 framework to generate a game tha
 * Install the openai and tkinter python packages
   * `pip install openai tk`
 * Add your OpenAI key to the file `openai_key`
+* Make sure you add some money to your OpenAI account so that the app can make GPT-4 requests
 * Run the game using the following command
   * `python game_frontend.py`
 
